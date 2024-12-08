@@ -8,17 +8,18 @@ function connect(port: number) {
     server.listen(port, 'localhost', () => console.log('The server is running on port:', port))
 
     server.on('request', (req, res) => {
+        let path = ''
         req.setEncoding('utf-8')
 
         req
             .on('readable', () => {
-                let path
-
-                while ((path = req.read()) !== null) {
-                    createReadStream(path)
-                        .pipe(res)
-                        .on('error', handleError)
-                }
+                let chunk
+                while ((chunk = req.read()) !== null) path += chunk
+            })
+            .on('end', () => {
+                createReadStream(path)
+                    .on('error', handleError)
+                    .pipe(res)
             })
 
         function handleError(err: any) {
@@ -30,4 +31,6 @@ function connect(port: number) {
             console.error(err)
         }
     })
+
+    return server
 }

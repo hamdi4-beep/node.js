@@ -7,21 +7,26 @@ function connect(port) {
     const server = (0, http_1.createServer)();
     server.listen(port, 'localhost', () => console.log('The server is running on port:', port));
     server.on('request', (req, res) => {
+        let path = '';
         req.setEncoding('utf-8');
         req
             .on('readable', () => {
-            let path;
-            while ((path = req.read()) !== null) {
-                (0, fs_1.createReadStream)(path)
-                    .on('error', (err) => {
-                    if (err.code === 'ENOENT') {
-                        res.end('No such file exists.');
-                        return;
-                    }
-                    console.error(err);
-                })
-                    .pipe(res);
-            }
+            let chunk;
+            while ((chunk = req.read()) !== null)
+                path += chunk;
+        })
+            .on('end', () => {
+            (0, fs_1.createReadStream)(path)
+                .on('error', handleError)
+                .pipe(res);
         });
+        function handleError(err) {
+            if (err.code === 'ENOENT') {
+                res.end('No such file exists.');
+                return;
+            }
+            console.error(err);
+        }
     });
+    return server;
 }
