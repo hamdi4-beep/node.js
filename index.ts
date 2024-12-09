@@ -1,23 +1,32 @@
-import { createReadStream, createWriteStream } from "fs";
+import { createReadStream } from "fs";
 import { createServer } from "http";
+import { join } from "path";
 
-const PORT = process.env.PORT
-
-const connect = (port: number) => createServer().listen(port, () => console.log('The server is running on port:', port))
-
-connect(3000).on('request', (req, res) => {
-    req.on('data', chunk => {
-        createReadStream(chunk)
-            .on('error', handleError)
-            .pipe(res)
-    })
+const server = createServer((req, res) => {
+    switch (req.method) {
+        case 'GET':
+            
+        if (req.url && routes[req.url]) {
+            createReadStream(join('client', routes[req.url]))
+                .on('open', () => res.writeHead(200, {
+                    'Content-Type': 'text/html'
+                }))
+                .pipe(res)
+        } else {
+            res
+                .writeHead(404, {
+                    'Content-Type': 'text/plain'
+                })
+                .end('Not Found')
+        }
+    }
 })
 
-function handleError(err: any) {
-    if (err.code === 'ENOENT') {
-        console.log('No such file exists.')
-        return
-    }
+server.listen(3000)
 
-    console.error('Error Log:', err)
+const routes: {
+    [key: string]: string
+} = {
+    '/': 'index.html',
+    '/user': 'user.html'
 }
