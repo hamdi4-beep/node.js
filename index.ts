@@ -1,5 +1,5 @@
 import { createReadStream } from "fs";
-import { createServer } from "http";
+import { createServer, ServerResponse } from "http";
 import { join } from "path";
 
 connect(3000)
@@ -9,25 +9,29 @@ function connect(port: number) {
 
     return createServer((req, res) => {
         if (req.method !== 'GET') {
-            res
-                .writeHead(405, {
-                    'Content-Type': 'text/plain'
-                })
-                .end('Only GET requests are allowed.')
+            sendResponse(res, 405).end('Only GET requests are allowed')
+            return
         }
 
         if (req.url && (route = routes[req.url])) {
-            createReadStream(join('client', route))
-                .on('open', () => res.writeHead(200, {
+            const path = join('client', route)
+
+            createReadStream(path)
+                .on('error', (err: any) => {
+                    if (err.code === 'ENOENT') {
+                        sendResponse(res, 404).end('No such file exists.')
+                        return
+                    }
+
+                    sendResponse(res, 500).end('Internal Server Error')
+                    console.error(err)
+                })
+                .on('open', () => sendResponse(res, 200, {
                     'Content-Type': 'text/html'
                 }))
                 .pipe(res)
         } else {
-            res
-                .writeHead(404, {
-                    'Content-Type': 'text/plain'
-                })
-                .end('No such route exists.')
+            sendResponse(res, 404).end('No such route exists.')
         }
     })
     .listen(port, () => console.log('The server is running on port:', port))
@@ -36,5 +40,19 @@ function connect(port: number) {
 const routes: {
     [key: string]: string
 } = {
-    '/': 'index.html'
+    '/': 'index.html',
+    '/about': 'about.html'
+}
+
+const sendResponse = (
+    res: ServerResponse,
+    statusCode: number,
+    headers?: {
+        [key: string]: string
+    }
+) => {
+    return res
+        .writeHead(statusCode, headers || {
+            'Content-Type': 'text/plain'
+        })
 }

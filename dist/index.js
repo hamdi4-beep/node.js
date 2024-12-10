@@ -8,29 +8,37 @@ function connect(port) {
     let route;
     return (0, http_1.createServer)((req, res) => {
         if (req.method !== 'GET') {
-            res
-                .writeHead(405, {
-                'Content-Type': 'text/plain'
-            })
-                .end('Only GET requests are allowed.');
+            sendResponse(res, 405).end('Only GET requests are allowed');
+            return;
         }
         if (req.url && (route = routes[req.url])) {
-            (0, fs_1.createReadStream)((0, path_1.join)('client', route))
-                .on('open', () => res.writeHead(200, {
+            const path = (0, path_1.join)('client', route);
+            (0, fs_1.createReadStream)(path)
+                .on('open', () => sendResponse(res, 200, {
                 'Content-Type': 'text/html'
             }))
+                .on('error', (err) => {
+                if (err.code === 'ENOENT') {
+                    sendResponse(res, 405).end('No such file exists');
+                    return;
+                }
+                console.error(err);
+            })
                 .pipe(res);
         }
         else {
-            res
-                .writeHead(404, {
-                'Content-Type': 'text/plain'
-            })
-                .end('No such route exists.');
+            sendResponse(res, 404).end('No such route exists.');
         }
     })
         .listen(port, () => console.log('The server is running on port:', port));
 }
 const routes = {
-    '/': 'index.html'
+    '/': 'index.html',
+    '/about': 'about.html'
+};
+const sendResponse = (res, statusCode, headers) => {
+    return res
+        .writeHead(statusCode, headers || {
+        'Content-Type': 'text/plain'
+    });
 };
