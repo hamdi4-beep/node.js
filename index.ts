@@ -1,58 +1,46 @@
 import { createReadStream } from "fs";
-import { createServer, ServerResponse } from "http";
+import { createServer } from "http";
 import { join } from "path";
 
-connect(3000)
+const server = createServer((req, res) => {
+    if (req.method !== 'GET') {
+        res
+            .writeHead(405, textPlainMMETYPE)
+            .end('Only GET requests are allowed.')
 
-function connect(port: number) {
-    let route
-
-    return createServer((req, res) => {
-        if (req.method !== 'GET') {
-            sendResponse(res, 405).end('Only GET requests are allowed')
-            return
-        }
-
-        if (req.url && (route = routes[req.url])) {
-            const path = join('client', route)
-
-            createReadStream(path)
-                .on('error', (err: any) => {
-                    if (err.code === 'ENOENT') {
-                        sendResponse(res, 404).end('No such file exists.')
-                        return
-                    }
-
-                    sendResponse(res, 500).end('Internal Server Error')
-                    console.error(err)
-                })
-                .on('open', () => sendResponse(res, 200, {
-                    'Content-Type': 'text/html'
-                }))
-                .pipe(res)
-        } else {
-            sendResponse(res, 404).end('No such route exists.')
-        }
-    })
-    .listen(port, () => console.log('The server is running on port:', port))
-}
-
-const routes: {
-    [key: string]: string
-} = {
-    '/': 'index.html',
-    '/about': 'about.html'
-}
-
-const sendResponse = (
-    res: ServerResponse,
-    statusCode: number,
-    headers?: {
-        [key: string]: string
+        return
     }
-) => {
-    return res
-        .writeHead(statusCode, headers || {
-            'Content-Type': 'text/plain'
-        })
+
+    sendImage('client/assets/image.jpg')
+
+    function sendImage(path: string) {
+        path = join(...path.split('/'))
+
+        createReadStream(path)
+            .on('error', (err: any) => {
+                if (err.code === 'ENOENT') {
+                    res
+                        .writeHead(404, textPlainMMETYPE)
+                        .end('No such resource was found.')
+
+                    return
+                }
+
+                console.error(err)
+
+                res
+                    .writeHead(500, textPlainMMETYPE)
+                    .end('Internal Error')
+            })
+            .on('open', () => res.writeHead(200, {
+                'Content-Type': 'image/jpeg'
+            }))
+            .pipe(res)
+    }
+})
+
+server.listen(3000, () => console.log('The server is running on port 3000'))
+
+const textPlainMMETYPE = {
+    'Content-Type': 'text/plain'
 }
