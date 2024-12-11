@@ -5,22 +5,46 @@ import { join } from "path";
 const server = createServer((req, res) => {
     if (req.method !== 'GET') {
         res
-            .writeHead(405, textPlainMMETYPE)
+            .writeHead(405, {
+                'Content-Type': 'text/plain'
+            })
             .end('Only GET requests are allowed.')
 
         return
     }
 
-    sendImage('client/assets/image.jpg')
+    switch (req.url) {
+        case '/':
+            sendResource('index.html')
+            break
 
-    function sendImage(path: string) {
-        path = join(...path.split('/'))
+        case '/about':
+            sendResource('about.html')
+            break
+
+        case '/resource':
+            sendResource('assets/image.jpg')
+            break;
+
+        default:
+            res
+                .writeHead(404, {
+                    'Content-Type': 'text/plain'
+                })
+                .end('Not Found')
+    }
+
+    function sendResource(path: string) {
+        const extension = getExtension(path)!
+        path = join('client', ...path.split('/'))
 
         createReadStream(path)
             .on('error', (err: any) => {
                 if (err.code === 'ENOENT') {
                     res
-                        .writeHead(404, textPlainMMETYPE)
+                        .writeHead(404, {
+                            'Content-Type': 'text/plain'
+                        })
                         .end('No such resource was found.')
 
                     return
@@ -29,11 +53,13 @@ const server = createServer((req, res) => {
                 console.error(err)
 
                 res
-                    .writeHead(500, textPlainMMETYPE)
-                    .end('Internal Error')
+                    .writeHead(500, {
+                        'Content-Type': 'text/plain'
+                    })
+                    .end('Internal Server Error')
             })
             .on('open', () => res.writeHead(200, {
-                'Content-Type': 'image/jpeg'
+                'Content-Type': mmeType[extension]
             }))
             .pipe(res)
     }
@@ -41,6 +67,14 @@ const server = createServer((req, res) => {
 
 server.listen(3000, () => console.log('The server is running on port 3000'))
 
-const textPlainMMETYPE = {
-    'Content-Type': 'text/plain'
+const getExtension = (filepath: string) => {
+    const filename = filepath.split('/').pop()
+    return filename?.match(/.(\w+)$/)?.[1]
+}
+
+const mmeType = {
+    'jpg': 'image/jpeg',
+    'html': 'text/html'
+} as {
+    [key: string]: string
 }
