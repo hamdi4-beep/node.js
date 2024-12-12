@@ -6,6 +6,19 @@
     <title>Document</title>
 </head>
 <body>
-    <p>This page was served by the server. <a href="/about">Check out some information about streams.</a></p>
+    <p>I'm learning how to stream audio and process buffer on the backend. Click the play button.</p>
+    <button onclick="handleClick()">Play music</button>
+
+    <script>
+        let audio
+        fetchData('http://localhost:3000/resource')
+
+        const handleClick = () => audio.paused ? audio.play() : audio.pause()
+
+        async function fetchData(URI) {
+            const res = await fetch(URI)
+            audio = new Audio(URL.createObjectURL(await res.blob()))
+        }
+    </script>
 </body>
 </html>

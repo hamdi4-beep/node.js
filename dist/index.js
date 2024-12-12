@@ -4,9 +4,9 @@ const fs_1 = require("fs");
 const http_1 = require("http");
 const path_1 = require("path");
 const server = (0, http_1.createServer)((req, res) => {
+    const sendResponse = (statusCode, headers) => res.writeHead(statusCode, headers);
     if (req.method !== 'GET') {
-        res
-            .writeHead(405, {
+        sendResponse(405, {
             'Content-Type': 'text/plain'
         })
             .end('Only GET requests are allowed.');
@@ -14,54 +14,35 @@ const server = (0, http_1.createServer)((req, res) => {
     }
     switch (req.url) {
         case '/':
-            sendResource('index.html');
-            break;
-        case '/about':
-            sendResource('about.html');
+            sendResource('index.html', 'text/html');
             break;
         case '/resource':
-            sendResource('assets/image.jpg');
+            sendResource('assets/audio.mp3', 'application/octet-stream');
             break;
         default:
-            res
-                .writeHead(404, {
+            sendResponse(404, {
                 'Content-Type': 'text/plain'
             })
-                .end('Not Found');
+                .end('404 Not Found');
     }
-    function sendResource(path) {
-        const extension = getExtension(path);
+    function sendResource(path, type) {
         path = (0, path_1.join)('client', ...path.split('/'));
         (0, fs_1.createReadStream)(path)
             .on('error', (err) => {
             if (err.code === 'ENOENT') {
-                res
-                    .writeHead(404, {
-                    'Content-Type': 'text/plain'
-                })
-                    .end('No such resource was found.');
+                console.error('No such file exists.');
                 return;
             }
-            console.error(err);
-            res
-                .writeHead(500, {
+            sendResponse(500, {
                 'Content-Type': 'text/plain'
             })
                 .end('Internal Server Error');
+            console.error(err);
         })
-            .on('open', () => res.writeHead(200, {
-            'Content-Type': mmeType[extension]
+            .on('open', () => sendResponse(200, {
+            'Content-Type': type
         }))
             .pipe(res);
     }
 });
-server.listen(3000, () => console.log('The server is running on port 3000'));
-const getExtension = (filepath) => {
-    var _a;
-    const filename = filepath.split('/').pop();
-    return (_a = filename === null || filename === void 0 ? void 0 : filename.match(/.(\w+)$/)) === null || _a === void 0 ? void 0 : _a[1];
-};
-const mmeType = {
-    'jpg': 'image/jpeg',
-    'html': 'text/html'
-};
+server.listen(3000, () => console.log('The server is running on port', 3000));
