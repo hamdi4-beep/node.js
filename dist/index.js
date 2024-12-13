@@ -14,14 +14,6 @@ const path_1 = require("path");
 const helpers_1 = require("./utilities/helpers");
 const { readFile } = fs_1.promises;
 (0, helpers_1.connect)(3000).on('request', (req, res) => {
-    if (req.method !== 'GET') {
-        res
-            .writeHead(405, {
-            'Content-Type': 'text/plain'
-        })
-            .end('Only GET requests are allowed.');
-        return;
-    }
     switch (req.url) {
         case '/':
             sendResource('index.html');
@@ -41,7 +33,8 @@ const { readFile } = fs_1.promises;
                 console.error(err);
             })
                 .on('open', () => res.writeHead(200, {
-                'Content-Type': 'application/octet-stream'
+                'Content-Type': 'application/octet-stream',
+                "access-control-allow-origin": '*'
             }))
                 .pipe(res);
             break;

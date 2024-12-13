@@ -27,7 +27,8 @@ connect(3000).on('request', (req, res) => {
                     console.error(err)
                 })
                 .on('open', () => res.writeHead(200, {
-                    'Content-Type': 'application/octet-stream'
+                    'Content-Type': 'application/octet-stream',
+                    'Access-Control-Allow-Origin': '*'
                 }))
                 .pipe(res)
 

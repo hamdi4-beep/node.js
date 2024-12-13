@@ -11,13 +11,16 @@
     <button id="playBtn">Play music</button>
 
     <script>
-        fetchData('http://localhost:3000/music', blobData => {
+        fetchData('http://192.168.100.53:3000/music', blobData => {
             const audio = new Audio(URL.createObjectURL(blobData))
 
             playBtn.addEventListener('click', () => {
-                console.log('Hour', Math.floor(audio.duration) / 3600)
-                console.log(audio.duration)
-                audio.play()
+                if (audio.paused) {
+                    audio.play()
+                    return
+                }
+
+                audio.pause()
             })
         })
 

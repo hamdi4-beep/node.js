@@ -8,15 +8,15 @@ const mmeTypes = {
 }
 
 export const getMmeType = (path: string) => {
-    const filename = path.split('/').pop()!
-    const matches = filename.match(/\.(\w+)$/)
+    const filename = path.split('/').pop()
+    const [_, extension] = filename?.match(/\.(\w+)$/) as string[]
 
-    if (!matches) {
-        console.log('No match was found.')
+    if (!extension) {
+        console.log('The file name does not have an extension.')
         return
     }
 
-    return mmeTypes[matches[1]]
+    return mmeTypes[extension]
 }
 
 export function connect(port: number) {
