@@ -4,20 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
     <p>I'm learning how to stream audio and process buffer on the backend. Click the play button.</p>
-    <button onclick="handleClick()">Play music</button>
+    <button id="playBtn">Play music</button>
 
     <script>
-        let audio
-        fetchData('http://localhost:3000/resource')
+        fetchData('http://localhost:3000/music', blobData => {
+            const audio = new Audio(URL.createObjectURL(blobData))
 
-        const handleClick = () => audio.paused ? audio.play() : audio.pause()
+            playBtn.addEventListener('click', () => {
+                console.log('Hour', Math.floor(audio.duration) / 3600)
+                console.log(audio.duration)
+                audio.play()
+            })
+        })
 
-        async function fetchData(URI) {
-            const res = await fetch(URI)
-            audio = new Audio(URL.createObjectURL(await res.blob()))
+        async function fetchData(URI, cb) {
+            try {
+                const res = await fetch(URI)
+                cb(await res.blob())
+            } catch (e) {
+                console.error(e)
+            }
         }
     </script>
 </body>
