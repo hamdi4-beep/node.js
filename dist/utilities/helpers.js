@@ -9,12 +9,12 @@ const mmeTypes = {
 };
 const getMmeType = (path) => {
     const filename = path.split('/').pop();
-    const matches = filename.match(/\.(\w+)$/);
-    if (!matches) {
-        console.log('No match was found.');
+    const [_, extension] = filename === null || filename === void 0 ? void 0 : filename.match(/\.(\w+)$/);
+    if (!extension) {
+        console.log('The file name does not have an extension.');
         return;
     }
-    return mmeTypes[matches[1]];
+    return mmeTypes[extension];
 };
 exports.getMmeType = getMmeType;
 function connect(port) {

@@ -8,21 +8,21 @@
 </head>
 <body>
     <p>I'm learning how to stream audio and process buffer on the backend. Click the play button.</p>
-    <button id="playBtn">Play music</button>
+    <button onclick="handleClick()">Play music</button>
 
     <script>
-        fetchData('http://192.168.100.53:3000/music', blobData => {
-            const audio = new Audio(URL.createObjectURL(blobData))
+        const audio = new Audio()
 
-            playBtn.addEventListener('click', () => {
-                if (audio.paused) {
-                    audio.play()
-                    return
-                }
-
+        const handleClick = () => {
+            if (!audio.paused) {
                 audio.pause()
-            })
-        })
+                return
+            }
+
+            audio.play()
+        }
+
+        fetchData('http://localhost:3000/music', blobData => audio.src = URL.createObjectURL(blobData))
 
         async function fetchData(URI, cb) {
             try {
